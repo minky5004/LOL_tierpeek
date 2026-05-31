@@ -1,54 +1,35 @@
+# spring-boot: true
 spring:
   application:
-    name: loltracker
-
+    name: tierpeek
+  datasource:
+    url: jdbc:postgresql://localhost:5432/tierpeek
+    username: postgres
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
   jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: validate
     show-sql: false
     properties:
       hibernate:
         format_sql: true
-        use_sql_comments: true
-
-  datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/loltracker}
-    username: ${SPRING_DATASOURCE_USERNAME:postgres}
-    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
-    driver-class-name: org.postgresql.Driver
-
+  servlet:
+    multipart:
+      max-file-size: 25MB
+      max-request-size: 30MB
   redis:
-    host: ${SPRING_REDIS_HOST:localhost}
-    port: ${SPRING_REDIS_PORT:6379}
+    host: localhost
+    port: 6379
     timeout: 2000ms
-    lettuce:
+    jedis:
       pool:
         max-active: 8
         max-idle: 8
         min-idle: 0
-
-  servlet:
-    multipart:
-      max-file-size: 10MB
-      max-request-size: 10MB
-
-server:
-  port: ${SERVER_PORT:8080}
-  servlet:
-    context-path: /
-  error:
-    include-message: always
-    include-binding-errors: always
-
-logging:
-  level:
-    root: INFO
-    com.loltracker: INFO
-    org.springframework.web: INFO
-    org.hibernate.SQL: DEBUG
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
-    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  cache:
+    type: redis
 
 riot:
   api:
@@ -58,9 +39,11 @@ riot:
       requests-per-second: 20
       requests-per-two-minutes: 100
 
-springdoc:
-  swagger-ui:
-    path: /swagger-ui.html
-    enabled: true
-  api-docs:
-    path: /v3/api-docs
+server:
+  port: 8080
+
+logging:
+  level:
+    root: WARN
+    com.tierpeek: INFO
+    org.hibernate.orm.jdbc: WARN
