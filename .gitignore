@@ -1,0 +1,67 @@
+# Gradle
+.gradle
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# IDE
+.idea/
+.vscode/
+*.iws
+*.iml
+*.ipr
+out/
+*.swp
+*.swo
+*~
+
+# STS (Spring Tool Suite)
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+application-local.yml
+application-local.properties
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Test coverage
+coverage/
+*.coverage
+
+# Docker
+docker-compose.override.yml
+
+# Claude Code
+.claude/worktrees/
+CLAUDE.md
+
+# Misc
+*.orig
+*.rej
