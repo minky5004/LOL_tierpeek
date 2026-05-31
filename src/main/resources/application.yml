@@ -47,5 +47,3 @@ logging:
     root: WARN
     com.tierpeek: INFO
     org.hibernate.orm.jdbc: WARN
-
-kind: Application

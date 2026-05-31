@@ -4,6 +4,7 @@ import com.tierpeek.client.RiotApiClient;
 import com.tierpeek.dto.riot.AccountDto;
 import com.tierpeek.entity.Summoner;
 import com.tierpeek.exception.FriendNotFoundException;
+import com.tierpeek.exception.FriendAlreadyExistsException;
 import com.tierpeek.repository.SummonerRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +28,7 @@ public class FriendService {
         summonerRepository.findByGameNameAndTagLine(gameName, tagLine)
                 .ifPresent(s -> {
                     log.warn("이미 등록된 친구: {}#{}", gameName, tagLine);
-                    throw new RuntimeException("이미 등록된 친구입니다");
+                    throw new FriendAlreadyExistsException("이미 등록된 친구입니다");
                 });
 
         AccountDto accountDto = riotApiClient.getAccountByRiotId(gameName, tagLine);

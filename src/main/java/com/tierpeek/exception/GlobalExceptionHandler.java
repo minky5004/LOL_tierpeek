@@ -30,6 +30,14 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.failure(e.getMessage()));
     }
 
+    @ExceptionHandler(FriendAlreadyExistsException.class)
+    public ResponseEntity<ApiResponse<?>> handleFriendAlreadyExistsException(FriendAlreadyExistsException e) {
+        log.warn("Friend already exists: {}", e.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ApiResponse.failure(e.getMessage()));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<?>> handleValidationException(MethodArgumentNotValidException e) {
         StringBuilder message = new StringBuilder("유효성 검사 실패: ");

@@ -9,20 +9,15 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Configuration
 public class RiotApiConfig {
 
-    @Value("${riot.api.base-url}")
-    private String baseUrl;
-
     @Value("${riot.api.key}")
     private String apiKey;
 
     @Bean
-    public WebClient riotWebClient() {
+    public WebClient.Builder riotWebClientBuilder() {
         return WebClient.builder()
-                .baseUrl(baseUrl)
                 .defaultHeader("X-Riot-Token", apiKey)
                 .exchangeStrategies(ExchangeStrategies.builder()
                         .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(1024 * 1024))
-                        .build())
-                .build();
+                        .build());
     }
 }

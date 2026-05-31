@@ -53,15 +53,19 @@ public class RiotRateLimiter {
         private void refill() {
             long now = System.currentTimeMillis();
 
-            // 초당 한도 리필
-            if (now - lastRefillTimeSecond >= 1000L) {
-                tokensSecond = REQUESTS_PER_SECOND;
+            // 초당 한도 리필 (점진적)
+            long elapsedSecond = now - lastRefillTimeSecond;
+            if (elapsedSecond > 0) {
+                double tokensToAdd = (elapsedSecond / 1000.0) * REQUESTS_PER_SECOND;
+                tokensSecond = Math.min(REQUESTS_PER_SECOND, (int) (tokensSecond + tokensToAdd));
                 lastRefillTimeSecond = now;
             }
 
-            // 2분 한도 리필
-            if (now - lastRefillTime2Min >= TWO_MINUTES_IN_MS) {
-                tokens2Min = REQUESTS_PER_TWO_MINUTES;
+            // 2분 한도 리필 (점진적)
+            long elapsed2Min = now - lastRefillTime2Min;
+            if (elapsed2Min > 0) {
+                double tokensToAdd = (elapsed2Min / (double) TWO_MINUTES_IN_MS) * REQUESTS_PER_TWO_MINUTES;
+                tokens2Min = Math.min(REQUESTS_PER_TWO_MINUTES, (int) (tokens2Min + tokensToAdd));
                 lastRefillTime2Min = now;
             }
         }

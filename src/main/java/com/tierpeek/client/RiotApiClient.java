@@ -20,7 +20,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RiotApiClient {
 
-    private final WebClient riotWebClient;
+    private final WebClient.Builder webClientBuilder;
     private final RiotRateLimiter rateLimiter;
 
     public AccountDto getAccountByRiotId(String gameName, String tagLine) {
@@ -28,7 +28,9 @@ public class RiotApiClient {
         rateLimiter.waitIfNeeded(region);
 
         try {
-            return riotWebClient.get()
+            String url = RoutingUtil.getRegionalUrl(region);
+            return webClientBuilder.baseUrl(url).build()
+                    .get()
                     .uri("/riot/account/v1/accounts/by-riot-id/{gameName}/{tagLine}", gameName, tagLine)
                     .retrieve()
                     .bodyToMono(AccountDto.class)
@@ -46,7 +48,9 @@ public class RiotApiClient {
         rateLimiter.waitIfNeeded(platform);
 
         try {
-            return riotWebClient.get()
+            String url = RoutingUtil.getPlatformUrl(platform);
+            return webClientBuilder.baseUrl(url).build()
+                    .get()
                     .uri("/lol/league/v4/entries/by-puuid/{puuid}", puuid)
                     .retrieve()
                     .bodyToFlux(LeagueEntryDto.class)
@@ -66,7 +70,9 @@ public class RiotApiClient {
         rateLimiter.waitIfNeeded(region);
 
         try {
-            return riotWebClient.get()
+            String url = RoutingUtil.getRegionalUrl(region);
+            return webClientBuilder.baseUrl(url).build()
+                    .get()
                     .uri("/lol/match/v5/matches/by-puuid/{puuid}/ids?start={start}&count={count}",
                             puuid, start, count)
                     .retrieve()
@@ -87,7 +93,9 @@ public class RiotApiClient {
         rateLimiter.waitIfNeeded(region);
 
         try {
-            return riotWebClient.get()
+            String url = RoutingUtil.getRegionalUrl(region);
+            return webClientBuilder.baseUrl(url).build()
+                    .get()
                     .uri("/lol/match/v5/matches/{matchId}", matchId)
                     .retrieve()
                     .bodyToMono(MatchDto.class)

@@ -6,7 +6,13 @@ public class RoutingUtil {
     }
 
     public static String getRegionalUrl(String platform) {
-        return "https://asia.api.riotgames.com";
+        return switch (platform.toLowerCase()) {
+            case "kr", "jp", "oce" -> "https://asia.api.riotgames.com";
+            case "na", "br", "lan", "las" -> "https://americas.api.riotgames.com";
+            case "euw", "eune", "tr", "ru" -> "https://europe.api.riotgames.com";
+            case "sea" -> "https://sea.api.riotgames.com";
+            default -> throw new IllegalArgumentException("지원하지 않는 플랫폼: " + platform);
+        };
     }
 
     public static String getPlatformUrl(String platform) {
