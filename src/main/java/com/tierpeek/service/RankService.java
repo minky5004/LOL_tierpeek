@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -63,7 +64,9 @@ public class RankService {
     }
 
     @Transactional(readOnly = true)
-    public RankSnapshot getLatestRank(String puuid, String queueType) {
-        return rankSnapshotRepository.findFirstByPuuidAndQueueTypeOrderByRecordedAtDesc(puuid, queueType);
+    public Optional<RankSnapshot> getLatestRank(String puuid, String queueType) {
+        return Optional.ofNullable(
+                rankSnapshotRepository.findFirstByPuuidAndQueueTypeOrderByRecordedAtDesc(puuid, queueType)
+        );
     }
 }
