@@ -6,6 +6,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.RedisSerializationContext;
 
 import java.time.Duration;
 
@@ -23,16 +25,20 @@ public class CacheConfig {
 
     @Bean
     public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
-        RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()
+        RedisCacheConfiguration base = RedisCacheConfiguration.defaultCacheConfig()
+                .serializeValuesWith(RedisSerializationContext.SerializationPair
+                        .fromSerializer(new GenericJackson2JsonRedisSerializer()));
+
+        RedisCacheConfiguration defaultConfig = base
                 .entryTtl(Duration.ofMinutes(30));
 
-        RedisCacheConfiguration dashboardConfig = RedisCacheConfiguration.defaultCacheConfig()
+        RedisCacheConfiguration dashboardConfig = base
                 .entryTtl(Duration.ofMinutes(5));
 
-        RedisCacheConfiguration rankHistoryConfig = RedisCacheConfiguration.defaultCacheConfig()
+        RedisCacheConfiguration rankHistoryConfig = base
                 .entryTtl(Duration.ofMinutes(30));
 
-        RedisCacheConfiguration matchesConfig = RedisCacheConfiguration.defaultCacheConfig()
+        RedisCacheConfiguration matchesConfig = base
                 .entryTtl(Duration.ofHours(1));
 
         return RedisCacheManager.builder(connectionFactory)

@@ -25,7 +25,7 @@ public class RankSnapshotCollector {
      * 등록된 친구들의 현재 랭크 스냅샷을 주기적으로 수집합니다.
      * 수집 후 관련 캐시를 초기화합니다.
      */
-    @CacheEvict(value = CacheConfig.DASHBOARD_CACHE, allEntries = true)
+    @CacheEvict(value = {CacheConfig.DASHBOARD_CACHE, CacheConfig.RANK_HISTORY_CACHE}, allEntries = true)
     @Scheduled(fixedRate = 1800000) // 30분마다 (1800000ms)
     public void collectRankSnapshots() {
         log.info("========== 랭크 스냅샷 수집 시작 ==========");
