@@ -1,10 +1,12 @@
 package com.tierpeek.controller;
 
+import com.tierpeek.config.CacheConfig;
 import com.tierpeek.dto.ApiResponse;
 import com.tierpeek.dto.LpPointDto;
 import com.tierpeek.service.RankService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,11 +31,13 @@ public class RankController {
 
     /**
      * 친구의 랭크 이력(LP 그래프)을 조회합니다.
+     * Redis에 30분 TTL로 캐시됩니다.
      *
      * @param puuid 소환사 고유 식별자
      * @param queue 큐 타입 (기본값: RANKED_SOLO_5x5, RANKED_FLEX_SR 등)
      * @return LP 포인트 시계열 데이터
      */
+    @Cacheable(value = CacheConfig.RANK_HISTORY_CACHE, key = "#puuid + ':' + #queue")
     @GetMapping
     public ApiResponse<List<LpPointDto>> getRankHistory(
             @PathVariable String puuid,

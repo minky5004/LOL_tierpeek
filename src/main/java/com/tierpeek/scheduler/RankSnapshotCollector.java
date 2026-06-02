@@ -1,11 +1,13 @@
 package com.tierpeek.scheduler;
 
+import com.tierpeek.config.CacheConfig;
 import com.tierpeek.entity.Summoner;
 import com.tierpeek.exception.RiotApiException;
 import com.tierpeek.service.FriendService;
 import com.tierpeek.service.RankService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -19,6 +21,11 @@ public class RankSnapshotCollector {
     private final FriendService friendService;
     private final RankService rankService;
 
+    /**
+     * 등록된 친구들의 현재 랭크 스냅샷을 주기적으로 수집합니다.
+     * 수집 후 관련 캐시를 초기화합니다.
+     */
+    @CacheEvict(value = CacheConfig.DASHBOARD_CACHE, allEntries = true)
     @Scheduled(fixedRate = 1800000) // 30분마다 (1800000ms)
     public void collectRankSnapshots() {
         log.info("========== 랭크 스냅샷 수집 시작 ==========");
