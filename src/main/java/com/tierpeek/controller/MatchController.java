@@ -1,5 +1,6 @@
 package com.tierpeek.controller;
 
+import com.tierpeek.config.CacheConfig;
 import com.tierpeek.dto.ApiResponse;
 import com.tierpeek.dto.MatchRecordDto;
 import com.tierpeek.entity.MatchRecord;
@@ -8,6 +9,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,11 +37,13 @@ public class MatchController {
 
     /**
      * 친구의 최근 매치 기록을 조회합니다.
+     * Redis에 1시간 TTL로 캐시됩니다.
      *
      * @param puuid 소환사 고유 식별자
      * @param count 조회할 매치 개수 (기본값: 20, 범위: 1~100)
      * @return 매치 기록 목록
      */
+    @Cacheable(value = CacheConfig.MATCHES_CACHE, key = "#puuid + ':' + #count")
     @GetMapping
     public ApiResponse<List<MatchRecordDto>> getMatches(
             @PathVariable String puuid,

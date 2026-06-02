@@ -1,10 +1,12 @@
 package com.tierpeek.controller;
 
+import com.tierpeek.config.CacheConfig;
 import com.tierpeek.dto.ApiResponse;
 import com.tierpeek.dto.FriendCardDto;
 import com.tierpeek.service.DashboardService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,9 +28,11 @@ public class DashboardController {
     /**
      * 등록된 친구들의 대시보드 정보를 조회합니다.
      * 각 친구의 현재 솔로 랭크와 최근 5경기 정보를 포함합니다.
+     * Redis에 5분 TTL로 캐시됩니다.
      *
      * @return 친구별 카드 정보 리스트
      */
+    @Cacheable(value = CacheConfig.DASHBOARD_CACHE, key = "'all'")
     @GetMapping
     public ApiResponse<List<FriendCardDto>> getDashboard() {
         log.info("대시보드 API 호출");

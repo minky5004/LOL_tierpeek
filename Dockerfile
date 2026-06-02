@@ -1,5 +1,5 @@
 # Multi-stage build
-FROM gradle:8.5-jdk21 AS builder
+FROM gradle:8.14-jdk21 AS builder
 WORKDIR /app
 COPY . .
 RUN gradle clean build -x test

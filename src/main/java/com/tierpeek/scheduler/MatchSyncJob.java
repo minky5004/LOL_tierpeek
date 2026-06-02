@@ -1,11 +1,13 @@
 package com.tierpeek.scheduler;
 
+import com.tierpeek.config.CacheConfig;
 import com.tierpeek.entity.Summoner;
 import com.tierpeek.exception.RiotApiException;
 import com.tierpeek.service.FriendService;
 import com.tierpeek.service.MatchService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -21,6 +23,11 @@ public class MatchSyncJob {
 
     private static final int MATCH_COUNT = 20;
 
+    /**
+     * 등록된 친구들의 최신 매치 기록을 주기적으로 동기화합니다.
+     * 동기화 후 관련 캐시를 초기화합니다.
+     */
+    @CacheEvict(value = {CacheConfig.DASHBOARD_CACHE, CacheConfig.MATCHES_CACHE}, allEntries = true)
     @Scheduled(fixedRate = 3600000) // 60분마다 (3600000ms)
     public void syncMatches() {
         log.info("========== 매치 동기화 시작 ==========");
