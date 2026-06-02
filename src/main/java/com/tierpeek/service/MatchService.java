@@ -24,6 +24,13 @@ public class MatchService {
     private final MatchRecordRepository matchRecordRepository;
     private final MatchRecordSaver matchRecordSaver;
 
+    /**
+     * 소환사의 매치 기록을 동기화합니다.
+     * 최신 매치 ID를 조회하고, 아직 저장되지 않은 매치의 상세 정보를 가져와 저장합니다.
+     *
+     * @param puuid 소환사 고유 식별자
+     * @param count 조회할 매치 개수
+     */
     @Transactional
     public void syncMatches(String puuid, int count) {
         log.info("매치 동기화 시작: {} (최대 {} 경기)", puuid, count);
@@ -58,21 +65,40 @@ public class MatchService {
     }
 
     /**
-     * 여러 소환사의 최근 매치를 한 번에 조회합니다.
-     * N+1 쿼리 문제를 해결하기 위한 배치 메서드입니다.
+     * 여러 소환사의 최근 매치를 한 번의 배치 쿼리로 조회합니다.
+     * 단일 쿼리로 모든 데이터를 조회하여 N+1 문제를 완전히 해결하고,
+     * 결과를 puuid별로 limit만큼 그룹핑하여 반환합니다.
      *
      * @param puuids 소환사 고유 식별자 목록
-     * @param count 소환사당 조회할 매치 개수
-     * @return puuid를 키로 하는 최근 매치 목록 Map
+     * @param count 소환사당 조회할 매치 개수 (범위: 1~100)
+     * @return puuid를 키로 하는 최근 매치 목록 Map (소환사당 최대 count개)
+     * @throws IllegalArgumentException puuids가 비어있거나 count가 범위 외인 경우
      */
     @Transactional(readOnly = true)
     public Map<String, List<MatchRecord>> getRecentMatchesForPuuids(List<String> puuids, int count) {
-        Map<String, List<MatchRecord>> resultMap = new HashMap<>();
-        Pageable pageable = PageRequest.of(0, count);
+        if (puuids == null || puuids.isEmpty()) {
+            return Map.of();
+        }
+        if (count <= 0 || count > 100) {
+            throw new IllegalArgumentException("count must be between 1 and 100");
+        }
 
+        Pageable pageable = PageRequest.of(0, count * puuids.size());
+        List<MatchRecord> allMatches = matchRecordRepository.findRecentByPuuidsOrderByGameCreationDesc(puuids, pageable);
+
+        Map<String, List<MatchRecord>> resultMap = new HashMap<>();
         for (String puuid : puuids) {
-            List<MatchRecord> matches = getRecentMatches(puuid, pageable);
-            resultMap.put(puuid, matches);
+            resultMap.put(puuid, List.of());
+        }
+
+        for (MatchRecord match : allMatches) {
+            String puuid = match.getPuuid();
+            List<MatchRecord> puuidMatches = resultMap.get(puuid);
+            if (puuidMatches != null && puuidMatches.size() < count) {
+                List<MatchRecord> newList = new java.util.ArrayList<>(puuidMatches);
+                newList.add(match);
+                resultMap.put(puuid, newList);
+            }
         }
 
         return resultMap;
