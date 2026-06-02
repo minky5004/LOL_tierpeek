@@ -11,7 +11,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -68,5 +70,25 @@ public class RankService {
         return Optional.ofNullable(
                 rankSnapshotRepository.findFirstByPuuidAndQueueTypeOrderByRecordedAtDesc(puuid, queueType)
         );
+    }
+
+    /**
+     * 여러 소환사의 최신 랭크를 한 번에 조회합니다.
+     * N+1 쿼리 문제를 해결하기 위한 배치 메서드입니다.
+     *
+     * @param puuids 소환사 고유 식별자 목록
+     * @param queueType 큐 타입
+     * @return puuid를 키로 하는 최신 랭크 스냅샷 Map (없으면 제외)
+     */
+    @Transactional(readOnly = true)
+    public Map<String, RankSnapshot> getLatestRanksForPuuids(List<String> puuids, String queueType) {
+        Map<String, RankSnapshot> resultMap = new HashMap<>();
+
+        for (String puuid : puuids) {
+            Optional<RankSnapshot> latestRank = getLatestRank(puuid, queueType);
+            latestRank.ifPresent(rank -> resultMap.put(puuid, rank));
+        }
+
+        return resultMap;
     }
 }

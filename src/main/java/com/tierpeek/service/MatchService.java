@@ -6,11 +6,14 @@ import com.tierpeek.entity.MatchRecord;
 import com.tierpeek.repository.MatchRecordRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -52,5 +55,26 @@ public class MatchService {
     @Transactional(readOnly = true)
     public List<MatchRecord> getRecentMatches(String puuid, Pageable pageable) {
         return matchRecordRepository.findByPuuidOrderByGameCreationDesc(puuid, pageable);
+    }
+
+    /**
+     * 여러 소환사의 최근 매치를 한 번에 조회합니다.
+     * N+1 쿼리 문제를 해결하기 위한 배치 메서드입니다.
+     *
+     * @param puuids 소환사 고유 식별자 목록
+     * @param count 소환사당 조회할 매치 개수
+     * @return puuid를 키로 하는 최근 매치 목록 Map
+     */
+    @Transactional(readOnly = true)
+    public Map<String, List<MatchRecord>> getRecentMatchesForPuuids(List<String> puuids, int count) {
+        Map<String, List<MatchRecord>> resultMap = new HashMap<>();
+        Pageable pageable = PageRequest.of(0, count);
+
+        for (String puuid : puuids) {
+            List<MatchRecord> matches = getRecentMatches(puuid, pageable);
+            resultMap.put(puuid, matches);
+        }
+
+        return resultMap;
     }
 }
