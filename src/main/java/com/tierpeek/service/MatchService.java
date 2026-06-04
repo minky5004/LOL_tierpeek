@@ -23,6 +23,7 @@ public class MatchService {
     private final RiotApiClient riotApiClient;
     private final MatchRecordRepository matchRecordRepository;
     private final MatchRecordSaver matchRecordSaver;
+    private final FriendService friendService;
 
     /**
      * 소환사의 매치 기록을 동기화합니다.
@@ -35,7 +36,8 @@ public class MatchService {
     public void syncMatches(String puuid, int count) {
         log.info("매치 동기화 시작: {} (최대 {} 경기)", puuid, count);
 
-        List<String> matchIds = riotApiClient.getMatchIdsByPuuid(puuid, 0, count);
+        var summoner = friendService.getFriendByPuuid(puuid);
+        List<String> matchIds = riotApiClient.getMatchIdsByPuuid(puuid, summoner.getPlatform(), 0, count);
         log.debug("조회된 매치 ID: {} 개", matchIds.size());
 
         int syncCount = 0;
@@ -47,7 +49,7 @@ public class MatchService {
             }
 
             try {
-                MatchDto matchDto = riotApiClient.getMatchDetail(matchId);
+                MatchDto matchDto = riotApiClient.getMatchDetail(matchId, summoner.getPlatform());
                 matchRecordSaver.saveMatchRecord(matchId, puuid, matchDto);
                 syncCount++;
             } catch (Exception e) {

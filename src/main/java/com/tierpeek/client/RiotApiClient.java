@@ -1,5 +1,6 @@
 package com.tierpeek.client;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tierpeek.dto.riot.AccountDto;
 import com.tierpeek.dto.riot.LeagueEntryDto;
 import com.tierpeek.dto.riot.MatchDto;
@@ -13,6 +14,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.util.retry.Retry;
 
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.List;
 
 @Slf4j
@@ -23,12 +25,11 @@ public class RiotApiClient {
     private final WebClient.Builder webClientBuilder;
     private final RiotRateLimiter rateLimiter;
 
-    public AccountDto getAccountByRiotId(String gameName, String tagLine) {
-        String region = "asia";
-        rateLimiter.waitIfNeeded(region);
+    public AccountDto getAccountByRiotId(String gameName, String tagLine, String platform) {
+        rateLimiter.waitIfNeeded(platform);
 
         try {
-            String url = RoutingUtil.getRegionalUrl(region);
+            String url = RoutingUtil.getRegionalUrl(platform);
             return webClientBuilder.baseUrl(url).build()
                     .get()
                     .uri("/riot/account/v1/accounts/by-riot-id/{gameName}/{tagLine}", gameName, tagLine)
@@ -65,35 +66,35 @@ public class RiotApiClient {
         }
     }
 
-    public List<String> getMatchIdsByPuuid(String puuid, int start, int count) {
-        String region = "asia";
-        rateLimiter.waitIfNeeded(region);
+    public List<String> getMatchIdsByPuuid(String puuid, String platform, int start, int count) {
+        rateLimiter.waitIfNeeded(platform);
 
         try {
-            String url = RoutingUtil.getRegionalUrl(region);
-            return webClientBuilder.baseUrl(url).build()
+            String url = RoutingUtil.getRegionalUrl(platform);
+            String jsonResponse = webClientBuilder.baseUrl(url).build()
                     .get()
                     .uri("/lol/match/v5/matches/by-puuid/{puuid}/ids?start={start}&count={count}",
                             puuid, start, count)
                     .retrieve()
-                    .bodyToFlux(String.class)
-                    .collectList()
+                    .bodyToMono(String.class)
                     .retryWhen(Retry.backoff(3, Duration.ofSeconds(1))
                             .maxBackoff(Duration.ofSeconds(10))
                             .filter(this::isRetryable))
                     .block();
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            return Arrays.asList(objectMapper.readValue(jsonResponse, String[].class));
         } catch (Exception e) {
             log.error("매치 ID 조회 실패: {}", puuid, e);
             throw new RiotApiException("매치 기록을 조회할 수 없습니다", 500, e);
         }
     }
 
-    public MatchDto getMatchDetail(String matchId) {
-        String region = "asia";
-        rateLimiter.waitIfNeeded(region);
+    public MatchDto getMatchDetail(String matchId, String platform) {
+        rateLimiter.waitIfNeeded(platform);
 
         try {
-            String url = RoutingUtil.getRegionalUrl(region);
+            String url = RoutingUtil.getRegionalUrl(platform);
             return webClientBuilder.baseUrl(url).build()
                     .get()
                     .uri("/lol/match/v5/matches/{matchId}", matchId)
