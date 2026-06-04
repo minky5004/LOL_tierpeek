@@ -24,7 +24,7 @@ public class MatchSyncJob {
 
     private static final int MATCH_COUNT = 20;
 
-    @Value("${match.sync.fixedRateMs:60000}")
+    @Value("${match.sync.fixedRateMs:1800000}")
     private long fixedRateMs;
 
     /**
@@ -32,7 +32,7 @@ public class MatchSyncJob {
      * 동기화 후 관련 캐시를 초기화합니다.
      */
     @CacheEvict(value = {CacheConfig.DASHBOARD_CACHE, CacheConfig.MATCHES_CACHE}, allEntries = true)
-    @Scheduled(fixedRateString = "${match.sync.fixedRateMs:60000}")
+    @Scheduled(fixedRateString = "${match.sync.fixedRateMs:1800000}")
     public void syncMatches() {
         log.info("========== 매치 동기화 시작 ==========");
 
