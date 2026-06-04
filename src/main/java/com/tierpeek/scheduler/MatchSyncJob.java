@@ -28,7 +28,7 @@ public class MatchSyncJob {
      * 동기화 후 관련 캐시를 초기화합니다.
      */
     @CacheEvict(value = {CacheConfig.DASHBOARD_CACHE, CacheConfig.MATCHES_CACHE}, allEntries = true)
-    @Scheduled(fixedRate = 3600000) // 60분마다 (3600000ms)
+    @Scheduled(fixedRate = 60000) // 1분마다 (60000ms)
     public void syncMatches() {
         log.info("========== 매치 동기화 시작 ==========");
 
