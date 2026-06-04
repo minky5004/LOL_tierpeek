@@ -30,6 +30,7 @@ dependencies {
         exclude group: 'io.lettuce', module: 'lettuce-core'
     }
     implementation 'redis.clients:jedis'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.4.0'
     compileOnly 'org.projectlombok:lombok'
     runtimeOnly 'org.postgresql:postgresql:42.7.1'
