@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LoL 친구 트래커</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎮 LoL 친구 트래커</h1>
+            <p class="last-update">마지막 갱신: <span id="lastUpdate">-</span></p>
+        </header>
+
+        <div id="loadingSpinner" class="loading-spinner hidden">갱신 중...</div>
+
+        <main>
+            <!-- 친구 추가 섹션 -->
+            <section class="add-friend-section">
+                <h2>친구 추가</h2>
+                <div class="add-friend-form">
+                    <div class="form-group">
+                        <label for="gameName">게임명:</label>
+                        <input type="text" id="gameName" placeholder="gameName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="tagLine">태그:</label>
+                        <input type="text" id="tagLine" placeholder="tagLine (예: KR1)" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="platform">플랫폼:</label>
+                        <select id="platform">
+                            <option value="kr">Korea (kr)</option>
+                            <option value="na">North America (na)</option>
+                            <option value="euw">Europe West (euw)</option>
+                        </select>
+                    </div>
+                    <button id="addFriendBtn" class="btn btn-primary">친구 추가</button>
+                </div>
+            </section>
+
+            <!-- 친구 카드 섹션 -->
+            <section class="friends-section">
+                <h2>친구들</h2>
+                <div id="friendsContainer" class="friends-grid">
+                    <div class="empty-state">
+                        <p>등록된 친구가 없습니다. 위에서 친구를 추가해주세요!</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 그래프 섹션 -->
+            <section class="graph-section" id="graphSection" style="display: none;">
+                <h2>LP 그래프</h2>
+                <div class="graph-controls">
+                    <label for="friendSelect">친구 선택: </label>
+                    <select id="friendSelect">
+                        <option value="">친구를 선택하세요</option>
+                    </select>
+                    <label for="queueSelect">랭크 타입: </label>
+                    <select id="queueSelect">
+                        <option value="RANKED_SOLO_5x5">솔로랭크</option>
+                        <option value="RANKED_FLEX_SR">자유랭크</option>
+                    </select>
+                </div>
+                <div class="chart-container">
+                    <canvas id="lpChart"></canvas>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>5분마다 자동으로 갱신됩니다</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
