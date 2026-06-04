@@ -5,13 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LoL 친구 트래커</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js" integrity="sha384-0ca1b3BIo3tM3qjc5Znh0fNnG3D5LP+6I5SBwxNzD4Y5DAEUfJDQslaAmslBjPyC" crossorigin="anonymous"></script>
 </head>
 <body>
     <div class="container">
         <header>
             <h1>🎮 LoL 친구 트래커</h1>
             <p class="last-update">마지막 갱신: <span id="lastUpdate">-</span></p>
+            <div class="header-controls">
+                <button id="refreshBtn" class="btn btn-small btn-info">🔄 전체 갱신</button>
+            </div>
         </header>
 
         <div id="loadingSpinner" class="loading-spinner hidden">갱신 중...</div>
@@ -64,6 +66,16 @@
                         <option value="RANKED_SOLO_5x5">솔로랭크</option>
                         <option value="RANKED_FLEX_SR">자유랭크</option>
                     </select>
+                    <label for="dateRangeSelect">기간: </label>
+                    <select id="dateRangeSelect">
+                        <option value="all">전체</option>
+                        <option value="7">지난 7일</option>
+                        <option value="30">지난 30일</option>
+                        <option value="latest">최근 20개</option>
+                    </select>
+                </div>
+                <div class="chart-info" id="chartInfo" style="display: none;">
+                    <span id="currentTierInfo"></span>
                 </div>
                 <div class="chart-container">
                     <canvas id="lpChart"></canvas>
@@ -76,6 +88,7 @@
         </footer>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

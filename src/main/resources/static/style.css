@@ -36,6 +36,14 @@ header h1 {
 .last-update {
     font-size: 0.9rem;
     opacity: 0.9;
+    margin-bottom: 15px;
+}
+
+.header-controls {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
 }
 
 main {
@@ -128,6 +136,22 @@ h2 {
 
 .btn-danger:hover {
     background: #ff5252;
+}
+
+.btn-small {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+}
+
+.btn-info {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.btn-info:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
 }
 
 /* 빈 상태 */
@@ -321,17 +345,29 @@ h2 {
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
+.chart-info {
+    background: #e7f3ff;
+    border-left: 4px solid #667eea;
+    padding: 12px 16px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    font-size: 0.95rem;
+    color: #333;
+    font-weight: 500;
+}
+
 .chart-container {
     position: relative;
-    height: 400px;
+    height: 450px;
     margin-top: 20px;
     background: #f8f9fa;
     border-radius: 8px;
-    padding: 20px;
+    padding: 25px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 canvas {
-    max-height: 400px;
+    max-height: 450px;
 }
 
 /* 푸터 */
@@ -369,7 +405,7 @@ footer {
     }
 
     .chart-container {
-        height: 300px;
+        height: 350px;
     }
 }
 

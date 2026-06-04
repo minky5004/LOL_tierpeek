@@ -14,10 +14,12 @@ document.addEventListener('DOMContentLoaded', () => {
 function setupEventListeners() {
     document.getElementById('friendSelect').addEventListener('change', updateChart);
     document.getElementById('queueSelect').addEventListener('change', updateChart);
+    document.getElementById('dateRangeSelect').addEventListener('change', updateChart);
     document.getElementById('addFriendForm').addEventListener('submit', (e) => {
         e.preventDefault();
         addFriend();
     });
+    document.getElementById('refreshBtn').addEventListener('click', runRefresh);
 }
 
 // 자동 갱신 설정
@@ -179,7 +181,7 @@ function createFriendCard(friend) {
         ? Math.round((friend.wins / (friend.wins + friend.losses)) * 100)
         : 0;
 
-    const lpPercentage = (friend.leaguePoints / 100) * 100;
+    const isMasterAbove = ['MASTER', 'GRANDMASTER', 'CHALLENGER'].includes(friend.tier);
 
     // 헤더 (친구명 + 삭제 버튼)
     const header = document.createElement('div');
@@ -201,7 +203,7 @@ function createFriendCard(friend) {
     header.appendChild(deleteBtn);
     card.appendChild(header);
 
-    // 현재 랭크
+    // 현재 랭크 (마스터+ 는 division 없음)
     const rankInfo = document.createElement('div');
     rankInfo.className = 'rank-info';
     const rankLabel = document.createElement('div');
@@ -210,7 +212,7 @@ function createFriendCard(friend) {
     const rankValue = document.createElement('div');
     rankValue.className = 'rank-value';
     rankValue.style.color = tierColor;
-    rankValue.textContent = `${friend.tier} ${friend.division ? friend.division : ''}`;
+    rankValue.textContent = isMasterAbove ? friend.tier : `${friend.tier} ${friend.division || ''}`;
     rankInfo.appendChild(rankLabel);
     rankInfo.appendChild(rankValue);
     card.appendChild(rankInfo);
@@ -224,15 +226,21 @@ function createFriendCard(friend) {
     const lpValue = document.createElement('div');
     lpValue.className = 'rank-value';
     lpValue.textContent = friend.leaguePoints;
-    const lpBar = document.createElement('div');
-    lpBar.className = 'lp-bar';
-    const lpFill = document.createElement('div');
-    lpFill.className = 'lp-fill';
-    lpFill.style.width = lpPercentage + '%';
-    lpBar.appendChild(lpFill);
     lpInfo.appendChild(lpLabel);
     lpInfo.appendChild(lpValue);
-    lpInfo.appendChild(lpBar);
+
+    // 마스터 이상이 아닌 경우에만 바 표시
+    if (!isMasterAbove) {
+        const lpPercentage = (friend.leaguePoints / 100) * 100;
+        const lpBar = document.createElement('div');
+        lpBar.className = 'lp-bar';
+        const lpFill = document.createElement('div');
+        lpFill.className = 'lp-fill';
+        lpFill.style.width = lpPercentage + '%';
+        lpBar.appendChild(lpFill);
+        lpInfo.appendChild(lpBar);
+    }
+
     card.appendChild(lpInfo);
 
     // 전적
@@ -348,6 +356,10 @@ function renderChart(rankHistory, puuid, queue) {
         if (chartContainer) {
             chartContainer.style.display = 'none';
         }
+        const chartInfo = document.getElementById('chartInfo');
+        if (chartInfo) {
+            chartInfo.style.display = 'none';
+        }
         showErrorMessage('그래프 데이터가 없습니다');
         return;
     }
@@ -358,20 +370,60 @@ function renderChart(rankHistory, puuid, queue) {
     }
 
     // 날짜순으로 정렬 (오래된 것부터)
-    const sorted = [...rankHistory].sort((a, b) =>
+    let sorted = [...rankHistory].sort((a, b) =>
         new Date(a.recordedAt) - new Date(b.recordedAt)
     );
 
-    const labels = sorted.map(point => {
+    // 기간 필터링
+    const dateRange = document.getElementById('dateRangeSelect').value;
+    const now = new Date();
+
+    if (dateRange === '7') {
+        const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        sorted = sorted.filter(point => new Date(point.recordedAt) >= sevenDaysAgo);
+    } else if (dateRange === '30') {
+        const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        sorted = sorted.filter(point => new Date(point.recordedAt) >= thirtyDaysAgo);
+    } else if (dateRange === 'latest') {
+        sorted = sorted.slice(-20);
+    }
+
+    if (sorted.length === 0) {
+        showErrorMessage('선택한 기간에 데이터가 없습니다');
+        return;
+    }
+
+    // 데이터 샘플링: 포인트가 50개 이상이면 자동 샘플링
+    const MAX_CHART_POINTS = 20;
+    let displayData = sorted;
+    if (sorted.length > MAX_CHART_POINTS) {
+        displayData = sampleData(sorted, MAX_CHART_POINTS);
+    }
+
+    const labels = displayData.map(point => {
         const date = new Date(point.recordedAt);
         return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
     });
 
-    const lpData = sorted.map(point => point.leaguePoints);
-    const tierData = sorted.map(point => point.tier);
+    const lpData = displayData.map(point => point.leaguePoints);
+    const tierData = displayData.map(point => point.tier);
+    const divisionData = displayData.map(point => point.division);
 
     const maxLp = Math.max(...lpData);
+    const minLp = Math.min(...lpData);
     const yAxisMax = Math.max(100, Math.ceil(maxLp * 1.1));
+    const yAxisMin = Math.max(0, Math.floor(minLp * 0.9));
+
+    // 현재(최신) 티어 정보 표시
+    const latestData = sorted[sorted.length - 1];
+    const tierInfoDiv = document.getElementById('chartInfo');
+    if (tierInfoDiv) {
+        tierInfoDiv.style.display = 'block';
+        const tierStr = ['MASTER', 'GRANDMASTER', 'CHALLENGER'].includes(latestData.tier)
+            ? latestData.tier
+            : `${latestData.tier} ${latestData.division || ''}`;
+        document.getElementById('currentTierInfo').textContent = `현재 티어: ${tierStr} (${latestData.leaguePoints} LP)`;
+    }
 
     const ctx = document.getElementById('lpChart').getContext('2d');
 
@@ -393,11 +445,11 @@ function renderChart(rankHistory, puuid, queue) {
                     borderWidth: 2,
                     fill: true,
                     tension: 0.4,
-                    pointRadius: 4,
+                    pointRadius: 5,
                     pointBackgroundColor: '#667eea',
                     pointBorderColor: '#fff',
                     pointBorderWidth: 2,
-                    pointHoverRadius: 6,
+                    pointHoverRadius: 7,
                 }
             ]
         },
@@ -412,35 +464,104 @@ function renderChart(rankHistory, puuid, queue) {
                 tooltip: {
                     mode: 'index',
                     intersect: false,
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    backgroundColor: 'rgba(0, 0, 0, 0.9)',
                     padding: 12,
                     cornerRadius: 6,
+                    titleFont: {
+                        size: 13,
+                        weight: 'bold'
+                    },
+                    bodyFont: {
+                        size: 12
+                    },
                     callbacks: {
-                        afterLabel: (context) => {
+                        title: (context) => {
+                            const date = new Date(sorted[context[0].dataIndex].recordedAt);
+                            return date.toLocaleString('ko-KR');
+                        },
+                        label: (context) => {
                             const index = context.dataIndex;
-                            return `Tier: ${tierData[index]}`;
+                            const tier = tierData[index];
+                            const division = divisionData[index];
+                            const lp = context.parsed.y;
+                            return `${tier} ${division ? division : ''} - ${lp} LP`;
                         }
                     }
                 }
             },
             scales: {
                 y: {
-                    beginAtZero: true,
+                    beginAtZero: false,
+                    min: yAxisMin,
                     max: yAxisMax,
+                    ticks: {
+                        font: {
+                            size: 11,
+                            weight: '500'
+                        },
+                        color: '#666',
+                        stepSize: 25
+                    },
                     title: {
                         display: true,
-                        text: 'League Points'
+                        text: 'League Points',
+                        font: {
+                            size: 12,
+                            weight: 'bold'
+                        },
+                        color: '#333'
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
                     }
                 },
                 x: {
+                    ticks: {
+                        font: {
+                            size: 10
+                        },
+                        color: '#666',
+                        maxRotation: 45,
+                        minRotation: 0,
+                        maxTicksLimit: 12
+                    },
                     title: {
                         display: true,
-                        text: '시간'
+                        text: '날짜/시간',
+                        font: {
+                            size: 12,
+                            weight: 'bold'
+                        },
+                        color: '#333'
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
                     }
                 }
             }
         }
     });
+}
+
+// 데이터 샘플링: 많은 데이터를 균등하게 줄임
+function sampleData(data, maxPoints) {
+    if (data.length <= maxPoints) {
+        return data;
+    }
+
+    const sampled = [];
+    const step = Math.ceil(data.length / maxPoints);
+
+    for (let i = 0; i < data.length; i += step) {
+        sampled.push(data[i]);
+    }
+
+    // 마지막 데이터포인트 항상 포함
+    if (sampled[sampled.length - 1] !== data[data.length - 1]) {
+        sampled.push(data[data.length - 1]);
+    }
+
+    return sampled;
 }
 
 // 마지막 갱신 시간 업데이트
@@ -488,4 +609,35 @@ function showSuccessMessage(message) {
     setTimeout(() => {
         successDiv.remove();
     }, 3000);
+}
+
+// 전체 갱신 (랭크 + 매치)
+async function runRefresh() {
+    try {
+        showLoadingSpinner(true);
+
+        const response = await fetch('/api/scheduler/refresh', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const apiResponse = await response.json();
+
+        showLoadingSpinner(false);
+
+        if (apiResponse.success) {
+            showSuccessMessage('✓ ' + apiResponse.message);
+            setTimeout(() => {
+                loadDashboard();
+            }, 500);
+        } else {
+            showErrorMessage('갱신 실패: ' + apiResponse.message);
+        }
+    } catch (error) {
+        console.error('갱신 오류:', error);
+        showLoadingSpinner(false);
+        showErrorMessage('갱신 중 오류 발생');
+    }
 }
