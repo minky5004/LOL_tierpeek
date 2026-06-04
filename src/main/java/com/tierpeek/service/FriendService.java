@@ -1,6 +1,7 @@
 package com.tierpeek.service;
 
 import com.tierpeek.client.RiotApiClient;
+import com.tierpeek.config.CacheConfig;
 import com.tierpeek.dto.riot.AccountDto;
 import com.tierpeek.entity.Summoner;
 import com.tierpeek.exception.FriendNotFoundException;
@@ -8,8 +9,10 @@ import com.tierpeek.exception.FriendAlreadyExistsException;
 import com.tierpeek.repository.SummonerRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 
@@ -22,6 +25,7 @@ public class FriendService {
     private final SummonerRepository summonerRepository;
 
     @Transactional
+    @CacheEvict(value = CacheConfig.DASHBOARD_CACHE, key = "'all'")
     public Summoner addFriend(String gameName, String tagLine, String platform) {
         log.info("친구 추가 시작: {}#{}", gameName, tagLine);
 
@@ -31,13 +35,14 @@ public class FriendService {
                     throw new FriendAlreadyExistsException("이미 등록된 친구입니다");
                 });
 
-        AccountDto accountDto = riotApiClient.getAccountByRiotId(gameName, tagLine);
+        String validPlatform = StringUtils.hasText(platform) ? platform : "kr";
+        AccountDto accountDto = riotApiClient.getAccountByRiotId(gameName, tagLine, validPlatform);
 
         Summoner summoner = Summoner.builder()
                 .puuid(accountDto.getPuuid())
                 .gameName(accountDto.getGameName())
                 .tagLine(accountDto.getTagLine())
-                .platform(platform != null ? platform : "kr")
+                .platform(validPlatform)
                 .build();
 
         Summoner saved = summonerRepository.save(summoner);
@@ -57,6 +62,7 @@ public class FriendService {
     }
 
     @Transactional
+    @CacheEvict(value = CacheConfig.DASHBOARD_CACHE, key = "'all'")
     public void removeFriend(String puuid) {
         Summoner summoner = getFriendByPuuid(puuid);
         summonerRepository.delete(summoner);

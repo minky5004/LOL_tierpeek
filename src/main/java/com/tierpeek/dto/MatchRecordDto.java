@@ -1,17 +1,17 @@
 package com.tierpeek.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-/**
- * 매치 기록 정보를 나타내는 DTO입니다.
- * null 필드는 JSON 직렬화에서 제외됩니다.
- */
 @Getter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class MatchRecordDto {
     /** 매치 고유 식별자 */

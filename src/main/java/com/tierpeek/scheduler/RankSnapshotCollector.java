@@ -26,7 +26,7 @@ public class RankSnapshotCollector {
      * 수집 후 관련 캐시를 초기화합니다.
      */
     @CacheEvict(value = {CacheConfig.DASHBOARD_CACHE, CacheConfig.RANK_HISTORY_CACHE}, allEntries = true)
-    @Scheduled(fixedRate = 1800000) // 30분마다 (1800000ms)
+    @Scheduled(initialDelay = 0, fixedRate = 60000) // 앱 실행 직후 첫 실행, 이후 1분마다
     public void collectRankSnapshots() {
         log.info("========== 랭크 스냅샷 수집 시작 ==========");
 
