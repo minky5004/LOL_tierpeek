@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LoL 친구 트래커</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.min.js" integrity="sha384-l2I8wrFjdIbEeTMJ3klD2dBMiF0a96gChZb8k8TdEcGPxR2vSwxFzOnUmvI8vfUy" crossorigin="anonymous"></script>
 </head>
 <body>
     <div class="container">
@@ -20,7 +20,7 @@
             <!-- 친구 추가 섹션 -->
             <section class="add-friend-section">
                 <h2>친구 추가</h2>
-                <div class="add-friend-form">
+                <form id="addFriendForm" class="add-friend-form">
                     <div class="form-group">
                         <label for="gameName">게임명:</label>
                         <input type="text" id="gameName" placeholder="gameName" required>
@@ -37,8 +37,8 @@
                             <option value="euw">Europe West (euw)</option>
                         </select>
                     </div>
-                    <button id="addFriendBtn" class="btn btn-primary">친구 추가</button>
-                </div>
+                    <button id="addFriendBtn" type="submit" class="btn btn-primary">친구 추가</button>
+                </form>
             </section>
 
             <!-- 친구 카드 섹션 -->

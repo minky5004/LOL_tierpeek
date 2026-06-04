@@ -14,7 +14,10 @@ document.addEventListener('DOMContentLoaded', () => {
 function setupEventListeners() {
     document.getElementById('friendSelect').addEventListener('change', updateChart);
     document.getElementById('queueSelect').addEventListener('change', updateChart);
-    document.getElementById('addFriendBtn').addEventListener('click', addFriend);
+    document.getElementById('addFriendForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        addFriend();
+    });
 }
 
 // 자동 갱신 설정
@@ -176,52 +179,97 @@ function createFriendCard(friend) {
         ? Math.round((friend.wins / (friend.wins + friend.losses)) * 100)
         : 0;
 
-    const lpPercentage = (friend.lp / 100) * 100;
+    const lpPercentage = (friend.leaguePoints / 100) * 100;
 
-    let recentMatches = '';
+    // 헤더 (친구명 + 삭제 버튼)
+    const header = document.createElement('div');
+    header.style.display = 'flex';
+    header.style.justifyContent = 'space-between';
+    header.style.alignItems = 'center';
+    header.style.marginBottom = '15px';
+
+    const friendName = document.createElement('div');
+    friendName.className = 'friend-name';
+    friendName.textContent = friend.gameName;
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'btn btn-danger';
+    deleteBtn.textContent = '삭제';
+    deleteBtn.addEventListener('click', () => removeFriend(friend.puuid, friend.gameName));
+
+    header.appendChild(friendName);
+    header.appendChild(deleteBtn);
+    card.appendChild(header);
+
+    // 현재 랭크
+    const rankInfo = document.createElement('div');
+    rankInfo.className = 'rank-info';
+    const rankLabel = document.createElement('div');
+    rankLabel.className = 'rank-label';
+    rankLabel.textContent = '현재 랭크';
+    const rankValue = document.createElement('div');
+    rankValue.className = 'rank-value';
+    rankValue.style.color = tierColor;
+    rankValue.textContent = `${friend.tier} ${friend.division ? friend.division : ''}`;
+    rankInfo.appendChild(rankLabel);
+    rankInfo.appendChild(rankValue);
+    card.appendChild(rankInfo);
+
+    // LP
+    const lpInfo = document.createElement('div');
+    lpInfo.className = 'rank-info';
+    const lpLabel = document.createElement('div');
+    lpLabel.className = 'rank-label';
+    lpLabel.textContent = 'LP';
+    const lpValue = document.createElement('div');
+    lpValue.className = 'rank-value';
+    lpValue.textContent = friend.leaguePoints;
+    const lpBar = document.createElement('div');
+    lpBar.className = 'lp-bar';
+    const lpFill = document.createElement('div');
+    lpFill.className = 'lp-fill';
+    lpFill.style.width = lpPercentage + '%';
+    lpBar.appendChild(lpFill);
+    lpInfo.appendChild(lpLabel);
+    lpInfo.appendChild(lpValue);
+    lpInfo.appendChild(lpBar);
+    card.appendChild(lpInfo);
+
+    // 전적
+    const recordInfo = document.createElement('div');
+    recordInfo.className = 'rank-info';
+    const recordLabel = document.createElement('div');
+    recordLabel.className = 'rank-label';
+    recordLabel.textContent = '전적';
+    const recordValue = document.createElement('div');
+    recordValue.className = 'rank-value';
+    recordValue.textContent = `${friend.wins}승 ${friend.losses}패 (${winRate}%)`;
+    recordInfo.appendChild(recordLabel);
+    recordInfo.appendChild(recordValue);
+    card.appendChild(recordInfo);
+
+    // 최근 전적
     if (friend.recentMatches && friend.recentMatches.length > 0) {
-        recentMatches = friend.recentMatches.map(match =>
-            `<span class="match-badge ${match.win ? 'match-win' : 'match-loss'}" title="${match.championName}">
-                ${match.win ? 'W' : 'L'}
-            </span>`
-        ).join('');
+        const matchHistory = document.createElement('div');
+        matchHistory.className = 'match-history';
+        const matchHistoryLabel = document.createElement('div');
+        matchHistoryLabel.className = 'match-history-label';
+        matchHistoryLabel.textContent = '최근 전적';
+        const recentMatches = document.createElement('div');
+        recentMatches.className = 'recent-matches';
+
+        friend.recentMatches.forEach(match => {
+            const badge = document.createElement('span');
+            badge.className = `match-badge ${match.win ? 'match-win' : 'match-loss'}`;
+            badge.title = match.championName || '';
+            badge.textContent = match.win ? 'W' : 'L';
+            recentMatches.appendChild(badge);
+        });
+
+        matchHistory.appendChild(matchHistoryLabel);
+        matchHistory.appendChild(recentMatches);
+        card.appendChild(matchHistory);
     }
-
-    card.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <div class="friend-name">${friend.gameName}</div>
-            <button class="btn btn-danger" onclick="removeFriend('${friend.puuid}', '${friend.gameName}')">삭제</button>
-        </div>
-
-        <div class="rank-info">
-            <div class="rank-label">현재 랭크</div>
-            <div class="rank-value" style="color: ${tierColor};">
-                ${friend.tier} ${friend.division ? friend.division : ''}
-            </div>
-        </div>
-
-        <div class="rank-info">
-            <div class="rank-label">LP</div>
-            <div class="rank-value">${friend.lp}</div>
-            <div class="lp-bar">
-                <div class="lp-fill" style="width: ${lpPercentage}%"></div>
-            </div>
-        </div>
-
-        <div class="rank-info">
-            <div class="rank-label">전적</div>
-            <div class="rank-value">${friend.wins}승 ${friend.losses}패 (${winRate}%)</div>
-        </div>
-
-        ${recentMatches ? `
-        <div class="match-history">
-            <div class="match-history-label">최근 전적</div>
-            <div class="recent-matches">
-                ${recentMatches}
-            </div>
-        </div>
-        ` : ''}
-    `;
 
     return card;
 }
@@ -292,8 +340,21 @@ async function updateChart() {
 // Chart.js로 그래프 렌더링
 function renderChart(rankHistory, puuid, queue) {
     if (!rankHistory || rankHistory.length === 0) {
+        if (chartInstance) {
+            chartInstance.destroy();
+            chartInstance = null;
+        }
+        const chartContainer = document.getElementById('lpChart');
+        if (chartContainer) {
+            chartContainer.style.display = 'none';
+        }
         showErrorMessage('그래프 데이터가 없습니다');
         return;
+    }
+
+    const chartContainer = document.getElementById('lpChart');
+    if (chartContainer) {
+        chartContainer.style.display = 'block';
     }
 
     // 날짜순으로 정렬 (오래된 것부터)
@@ -306,8 +367,11 @@ function renderChart(rankHistory, puuid, queue) {
         return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
     });
 
-    const lpData = sorted.map(point => point.lp);
+    const lpData = sorted.map(point => point.leaguePoints);
     const tierData = sorted.map(point => point.tier);
+
+    const maxLp = Math.max(...lpData);
+    const yAxisMax = Math.max(100, Math.ceil(maxLp * 1.1));
 
     const ctx = document.getElementById('lpChart').getContext('2d');
 
@@ -362,7 +426,7 @@ function renderChart(rankHistory, puuid, queue) {
             scales: {
                 y: {
                     beginAtZero: true,
-                    max: 100,
+                    max: yAxisMax,
                     title: {
                         display: true,
                         text: 'League Points'
