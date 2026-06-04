@@ -31,7 +31,11 @@ public class CacheConfig {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.activateDefaultTyping(
-                BasicPolymorphicTypeValidator.builder().allowIfBaseType(Object.class).build(),
+                BasicPolymorphicTypeValidator.builder()
+                        .allowIfSubType("com.tierpeek.dto.")
+                        .allowIfSubType("java.util.")
+                        .allowIfSubType("java.time.")
+                        .build(),
                 ObjectMapper.DefaultTyping.NON_FINAL
         );
 

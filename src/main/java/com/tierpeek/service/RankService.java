@@ -62,7 +62,7 @@ public class RankService {
         List<RankSnapshot> snapshots = rankSnapshotRepository
                 .findByPuuidAndQueueTypeOrderByRecordedAtDesc(puuid, queueType);
 
-        log.info("getLpHistory: puuid={}, queueType={}, found {} snapshots", puuid, queueType, snapshots.size());
+        log.debug("getLpHistory: queueType={}, found {} snapshots", queueType, snapshots.size());
 
         return snapshots.stream()
                 .map(s -> LpPointDto.builder()

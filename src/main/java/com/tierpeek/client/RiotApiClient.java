@@ -24,7 +24,17 @@ public class RiotApiClient {
 
     private final WebClient.Builder webClientBuilder;
     private final RiotRateLimiter rateLimiter;
+    private final ObjectMapper objectMapper;
 
+    /**
+     * Riot ID로 계정 정보를 조회합니다.
+     *
+     * @param gameName 게임명
+     * @param tagLine 태그
+     * @param platform 플랫폼 (kr, na, euw 등)
+     * @return 계정 정보 DTO
+     * @throws RiotApiException API 호출 실패 시
+     */
     public AccountDto getAccountByRiotId(String gameName, String tagLine, String platform) {
         rateLimiter.waitIfNeeded(platform);
 
@@ -45,6 +55,14 @@ public class RiotApiClient {
         }
     }
 
+    /**
+     * 소환사의 리그 엔트리(랭크 정보)를 조회합니다.
+     *
+     * @param puuid 소환사 고유 식별자
+     * @param platform 플랫폼 (kr, na, euw 등)
+     * @return 리그 엔트리 목록 (솔로, 자유, 3v3 등)
+     * @throws RiotApiException API 호출 실패 시
+     */
     public List<LeagueEntryDto> getLeagueEntriesByPuuid(String puuid, String platform) {
         rateLimiter.waitIfNeeded(platform);
 
@@ -66,6 +84,16 @@ public class RiotApiClient {
         }
     }
 
+    /**
+     * 소환사의 매치 ID 목록을 조회합니다.
+     *
+     * @param puuid 소환사 고유 식별자
+     * @param platform 플랫폼 (kr, na, euw 등)
+     * @param start 조회 시작 인덱스
+     * @param count 조회할 매치 개수 (최대 100)
+     * @return 매치 ID 목록
+     * @throws RiotApiException API 호출 실패 시
+     */
     public List<String> getMatchIdsByPuuid(String puuid, String platform, int start, int count) {
         rateLimiter.waitIfNeeded(platform);
 
@@ -82,7 +110,6 @@ public class RiotApiClient {
                             .filter(this::isRetryable))
                     .block();
 
-            ObjectMapper objectMapper = new ObjectMapper();
             return Arrays.asList(objectMapper.readValue(jsonResponse, String[].class));
         } catch (Exception e) {
             log.error("매치 ID 조회 실패: {}", puuid, e);
@@ -90,6 +117,14 @@ public class RiotApiClient {
         }
     }
 
+    /**
+     * 특정 매치의 상세 정보를 조회합니다.
+     *
+     * @param matchId 매치 고유 식별자
+     * @param platform 플랫폼 (kr, na, euw 등)
+     * @return 매치 상세 정보 DTO
+     * @throws RiotApiException API 호출 실패 시
+     */
     public MatchDto getMatchDetail(String matchId, String platform) {
         rateLimiter.waitIfNeeded(platform);
 
@@ -110,6 +145,13 @@ public class RiotApiClient {
         }
     }
 
+    /**
+     * 재시도 가능한 에러 여부를 판단합니다.
+     * 429(Too Many Requests), 503(Service Unavailable) 상태 코드는 재시도합니다.
+     *
+     * @param throwable 발생한 예외
+     * @return 재시도 가능 여부
+     */
     private boolean isRetryable(Throwable throwable) {
         return throwable.getMessage() != null &&
                (throwable.getMessage().contains("429") ||

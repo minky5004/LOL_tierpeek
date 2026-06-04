@@ -36,8 +36,20 @@ public class MatchService {
     public void syncMatches(String puuid, int count) {
         log.info("매치 동기화 시작: {} (최대 {} 경기)", puuid, count);
 
-        var summoner = friendService.getFriendByPuuid(puuid);
-        List<String> matchIds = riotApiClient.getMatchIdsByPuuid(puuid, summoner.getPlatform(), 0, count);
+        String platform;
+        try {
+            var summoner = friendService.getFriendByPuuid(puuid);
+            platform = summoner.getPlatform();
+            if (platform == null || platform.isBlank()) {
+                log.warn("소환사 플랫폼 정보가 유효하지 않음: {}", puuid);
+                return;
+            }
+        } catch (Exception e) {
+            log.warn("소환사 정보 조회 실패, 매치 동기화 스킵: {} ({})", puuid, e.getMessage());
+            return;
+        }
+
+        List<String> matchIds = riotApiClient.getMatchIdsByPuuid(puuid, platform, 0, count);
         log.debug("조회된 매치 ID: {} 개", matchIds.size());
 
         int syncCount = 0;
@@ -49,7 +61,7 @@ public class MatchService {
             }
 
             try {
-                MatchDto matchDto = riotApiClient.getMatchDetail(matchId, summoner.getPlatform());
+                MatchDto matchDto = riotApiClient.getMatchDetail(matchId, platform);
                 matchRecordSaver.saveMatchRecord(matchId, puuid, matchDto);
                 syncCount++;
             } catch (Exception e) {

@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 
@@ -34,7 +35,7 @@ public class FriendService {
                     throw new FriendAlreadyExistsException("이미 등록된 친구입니다");
                 });
 
-        String validPlatform = platform != null ? platform : "kr";
+        String validPlatform = StringUtils.hasText(platform) ? platform : "kr";
         AccountDto accountDto = riotApiClient.getAccountByRiotId(gameName, tagLine, validPlatform);
 
         Summoner summoner = Summoner.builder()

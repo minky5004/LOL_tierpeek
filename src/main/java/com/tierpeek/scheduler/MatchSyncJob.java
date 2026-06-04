@@ -7,6 +7,7 @@ import com.tierpeek.service.FriendService;
 import com.tierpeek.service.MatchService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -23,12 +24,15 @@ public class MatchSyncJob {
 
     private static final int MATCH_COUNT = 20;
 
+    @Value("${match.sync.fixedRateMs:60000}")
+    private long fixedRateMs;
+
     /**
      * 등록된 친구들의 최신 매치 기록을 주기적으로 동기화합니다.
      * 동기화 후 관련 캐시를 초기화합니다.
      */
     @CacheEvict(value = {CacheConfig.DASHBOARD_CACHE, CacheConfig.MATCHES_CACHE}, allEntries = true)
-    @Scheduled(fixedRate = 60000) // 1분마다 (60000ms)
+    @Scheduled(fixedRateString = "${match.sync.fixedRateMs:60000}")
     public void syncMatches() {
         log.info("========== 매치 동기화 시작 ==========");
 
