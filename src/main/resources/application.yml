@@ -39,6 +39,14 @@ riot:
       requests-per-second: 20
       requests-per-two-minutes: 100
 
+rank:
+  snapshot:
+    fixedRateMs: 1800000
+
+match:
+  sync:
+    fixedRateMs: 1800000
+
 server:
   port: 8080
 

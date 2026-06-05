@@ -1,6 +1,7 @@
 package com.tierpeek.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
@@ -12,7 +13,6 @@ import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSeriali
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 
 import java.time.Duration;
-import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 
 /**
  * Redis 캐시 설정입니다.
@@ -28,9 +28,10 @@ public class CacheConfig {
 
     @Bean
     public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
-        objectMapper.activateDefaultTyping(
+        // Redis 직렬화용 ObjectMapper (API용과 분리)
+        ObjectMapper redisMapper = new ObjectMapper();
+        redisMapper.registerModule(new JavaTimeModule());
+        redisMapper.activateDefaultTyping(
                 BasicPolymorphicTypeValidator.builder()
                         .allowIfSubType("com.tierpeek.dto.")
                         .allowIfSubType("java.util.")
@@ -41,7 +42,7 @@ public class CacheConfig {
 
         RedisCacheConfiguration base = RedisCacheConfiguration.defaultCacheConfig()
                 .serializeValuesWith(RedisSerializationContext.SerializationPair
-                        .fromSerializer(new GenericJackson2JsonRedisSerializer(objectMapper)));
+                        .fromSerializer(new GenericJackson2JsonRedisSerializer(redisMapper)));
 
         RedisCacheConfiguration defaultConfig = base
                 .entryTtl(Duration.ofMinutes(30));
