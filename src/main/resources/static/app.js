@@ -2,6 +2,7 @@
 let dashboardData = null;
 let chartInstance = null;
 const AUTO_REFRESH_INTERVAL = 5 * 60 * 1000; // 5분
+let isRefreshing = false;
 
 // 페이지 로드 시 실행
 document.addEventListener('DOMContentLoaded', () => {
@@ -355,10 +356,12 @@ function renderChart(rankHistory, puuid, queue) {
         const chartContainer = document.getElementById('lpChart');
         if (chartContainer) {
             chartContainer.style.display = 'none';
+            chartContainer.innerHTML = '';
         }
         const chartInfo = document.getElementById('chartInfo');
         if (chartInfo) {
             chartInfo.style.display = 'none';
+            chartInfo.innerHTML = '';
         }
         showErrorMessage('그래프 데이터가 없습니다');
         return;
@@ -408,6 +411,7 @@ function renderChart(rankHistory, puuid, queue) {
     const lpData = displayData.map(point => point.leaguePoints);
     const tierData = displayData.map(point => point.tier);
     const divisionData = displayData.map(point => point.division);
+    const recordedAtData = displayData.map(point => point.recordedAt);
 
     const maxLp = Math.max(...lpData);
     const minLp = Math.min(...lpData);
@@ -476,7 +480,8 @@ function renderChart(rankHistory, puuid, queue) {
                     },
                     callbacks: {
                         title: (context) => {
-                            const date = new Date(sorted[context[0].dataIndex].recordedAt);
+                            const index = context[0].dataIndex;
+                            const date = new Date(recordedAtData[index]);
                             return date.toLocaleString('ko-KR');
                         },
                         label: (context) => {
@@ -613,8 +618,18 @@ function showSuccessMessage(message) {
 
 // 전체 갱신 (랭크 + 매치)
 async function runRefresh() {
+    // 동시 실행 방지
+    if (isRefreshing) {
+        showErrorMessage('갱신이 이미 진행 중입니다. 잠시 후 다시 시도해주세요.');
+        return;
+    }
+
+    isRefreshing = true;
+    const refreshBtn = document.getElementById('refreshBtn');
+
     try {
         showLoadingSpinner(true);
+        if (refreshBtn) refreshBtn.disabled = true;
 
         const response = await fetch('/api/scheduler/refresh', {
             method: 'POST',
@@ -639,5 +654,8 @@ async function runRefresh() {
         console.error('갱신 오류:', error);
         showLoadingSpinner(false);
         showErrorMessage('갱신 중 오류 발생');
+    } finally {
+        isRefreshing = false;
+        if (refreshBtn) refreshBtn.disabled = false;
     }
 }

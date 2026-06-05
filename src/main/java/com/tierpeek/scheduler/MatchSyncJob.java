@@ -32,7 +32,7 @@ public class MatchSyncJob {
      * 동기화 후 관련 캐시를 초기화합니다.
      */
     @CacheEvict(value = {CacheConfig.DASHBOARD_CACHE, CacheConfig.MATCHES_CACHE}, allEntries = true)
-    @Scheduled(fixedRateString = "${match.sync.fixedRateMs:1800000}")
+    @Scheduled(fixedRateString = "${match.sync.fixedRateMs}")
     public void syncMatches() {
         log.info("========== 매치 동기화 시작 ==========");
 
