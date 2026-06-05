@@ -1,6 +1,7 @@
 package com.tierpeek.controller;
 
 import com.tierpeek.dto.ApiResponse;
+import com.tierpeek.exception.SchedulerAlreadyRunningException;
 import com.tierpeek.scheduler.MatchSyncJob;
 import com.tierpeek.scheduler.RankSnapshotCollector;
 import lombok.RequiredArgsConstructor;
@@ -51,6 +52,9 @@ public class SchedulerController {
                 rankSnapshotCollector.collectRankSnapshots();
                 result.append("✓ 랭크 수집 완료");
                 rankSuccess = true;
+            } catch (SchedulerAlreadyRunningException e) {
+                log.warn("랭크 수집 건너뜀: {}", e.getMessage());
+                result.append("⏭️ 랭크 수집 건너뜀(이미 진행 중)");
             } catch (Exception e) {
                 log.error("랭크 수집 중 오류", e);
                 result.append("✗ 랭크 수집 실패");
@@ -62,6 +66,9 @@ public class SchedulerController {
                 matchSyncJob.syncMatches();
                 result.append("✓ 매치 동기화 완료");
                 matchSuccess = true;
+            } catch (SchedulerAlreadyRunningException e) {
+                log.warn("매치 동기화 건너뜀: {}", e.getMessage());
+                result.append("⏭️ 매치 동기화 건너뜀(이미 진행 중)");
             } catch (Exception e) {
                 log.error("매치 동기화 중 오류", e);
                 result.append("✗ 매치 동기화 실패");
@@ -69,7 +76,7 @@ public class SchedulerController {
 
             // 둘 다 성공하면 success, 하나라도 실패하면 failure
             if (rankSuccess && matchSuccess) {
-                return ApiResponse.success(result.toString());
+                return ApiResponse.success("갱신 완료", result.toString());
             } else {
                 return ApiResponse.failure(result.toString());
             }

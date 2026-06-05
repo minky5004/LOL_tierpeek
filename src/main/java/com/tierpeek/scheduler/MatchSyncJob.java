@@ -3,6 +3,7 @@ package com.tierpeek.scheduler;
 import com.tierpeek.config.CacheConfig;
 import com.tierpeek.entity.Summoner;
 import com.tierpeek.exception.RiotApiException;
+import com.tierpeek.exception.SchedulerAlreadyRunningException;
 import com.tierpeek.service.FriendService;
 import com.tierpeek.service.MatchService;
 import lombok.RequiredArgsConstructor;
@@ -35,12 +36,11 @@ public class MatchSyncJob {
      * 동기화 후 관련 캐시를 초기화합니다.
      */
     @CacheEvict(value = {CacheConfig.DASHBOARD_CACHE, CacheConfig.MATCHES_CACHE}, allEntries = true)
-    @Scheduled(fixedRateString = "${match.sync.fixedRateMs}")
+    @Scheduled(fixedRateString = "${match.sync.fixedRateMs:1800000}")
     public void syncMatches() {
         // 동시 실행 방지
         if (!isSyncing.compareAndSet(false, true)) {
-            log.warn("매치 동기화가 이미 진행 중입니다. 건너뜀");
-            return;
+            throw new SchedulerAlreadyRunningException("매치 동기화가 이미 진행 중입니다");
         }
 
         try {

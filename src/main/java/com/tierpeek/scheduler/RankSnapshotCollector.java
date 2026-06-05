@@ -3,6 +3,7 @@ package com.tierpeek.scheduler;
 import com.tierpeek.config.CacheConfig;
 import com.tierpeek.entity.Summoner;
 import com.tierpeek.exception.RiotApiException;
+import com.tierpeek.exception.SchedulerAlreadyRunningException;
 import com.tierpeek.service.FriendService;
 import com.tierpeek.service.RankService;
 import lombok.RequiredArgsConstructor;
@@ -37,8 +38,7 @@ public class RankSnapshotCollector {
     public void collectRankSnapshots() {
         // 동시 실행 방지
         if (!isCollecting.compareAndSet(false, true)) {
-            log.warn("랭크 스냅샷 수집이 이미 진행 중입니다. 건너뜀");
-            return;
+            throw new SchedulerAlreadyRunningException("랭크 스냅샷 수집이 이미 진행 중입니다");
         }
 
         try {

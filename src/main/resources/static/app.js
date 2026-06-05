@@ -637,11 +637,19 @@ async function runRefresh() {
         showLoadingSpinner(true);
         if (refreshBtn) refreshBtn.disabled = true;
 
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+
+        // 로컬 스토리지에서 스케줄러 키 읽기
+        const schedulerKey = localStorage.getItem('schedulerKey');
+        if (schedulerKey) {
+            headers['X-Scheduler-Key'] = schedulerKey;
+        }
+
         const response = await fetch('/api/scheduler/refresh', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            }
+            headers: headers
         });
 
         const apiResponse = await response.json();
