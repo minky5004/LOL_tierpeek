@@ -548,23 +548,29 @@ function renderChart(rankHistory, puuid, queue) {
     });
 }
 
-// 데이터 샘플링: 많은 데이터를 균등하게 줄임
+// 데이터 샘플링: 많은 데이터를 균등하게 줄임 (첫/마지막 포함)
 function sampleData(data, maxPoints) {
     if (data.length <= maxPoints) {
         return data;
     }
 
     const sampled = [];
-    const step = Math.ceil(data.length / maxPoints);
+    const indices = new Set();
 
-    for (let i = 0; i < data.length; i += step) {
-        sampled.push(data[i]);
+    // 첫 점과 마지막 점은 반드시 포함
+    indices.add(0);
+    indices.add(data.length - 1);
+
+    // 나머지 포인트들을 균등하게 분배
+    for (let i = 1; i < maxPoints - 1; i++) {
+        const index = Math.round(i * (data.length - 1) / (maxPoints - 1));
+        indices.add(index);
     }
 
-    // 마지막 데이터포인트 항상 포함
-    if (sampled[sampled.length - 1] !== data[data.length - 1]) {
-        sampled.push(data[data.length - 1]);
-    }
+    // 정렬된 인덱스로 데이터 추출
+    Array.from(indices).sort((a, b) => a - b).forEach(index => {
+        sampled.push(data[index]);
+    });
 
     return sampled;
 }
