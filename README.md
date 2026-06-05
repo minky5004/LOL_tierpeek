@@ -78,10 +78,16 @@ docker-compose up -d
 # 1. 데이터베이스 + 캐시 준비
 docker-compose up -d postgres redis
 
-# 2. 애플리케이션 실행
+# 2. 애플리케이션 실행 (Linux/macOS)
 ./gradlew bootRun
 
-# 또는
+# 2. 애플리케이션 실행 (Windows)
+gradlew.bat bootRun
+
+# 또는 빌드 후 실행
+./gradlew build -x test       # Linux/macOS
+gradlew.bat build -x test     # Windows
+
 java -jar build/libs/tierpeek-0.0.1-SNAPSHOT.jar
 ```
 
@@ -499,14 +505,15 @@ docker run -d \
 ## 빌드 & 테스트
 
 ```bash
-# 전체 빌드 (테스트 제외)
-./gradlew clean build -x test
+# Linux/macOS
+./gradlew clean build -x test      # 전체 빌드 (테스트 제외)
+./gradlew test                     # 테스트 실행
+./gradlew test --tests "RiotRateLimiterTest"  # 특정 테스트
 
-# 테스트 실행
-./gradlew test
-
-# 특정 테스트 실행
-./gradlew test --tests "RiotRateLimiterTest"
+# Windows
+gradlew.bat clean build -x test
+gradlew.bat test
+gradlew.bat test --tests "RiotRateLimiterTest"
 ```
 
 ## 📝 라이선스
